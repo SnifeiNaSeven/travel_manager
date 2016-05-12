@@ -17,8 +17,8 @@ void clrscr()
     system("@cls||clear");
 }
 
-void clean_str(char *str){
-    memset (str,' ',strlen(str));
+void cleanstr(char *out){
+    strcpy(out,"");
 }
 
 int menu_principal(void) {
@@ -56,98 +56,62 @@ int menu_principal(void) {
     return option;
 }
 
-int menu_1(void) {
-    FILE *viagens = fopen("viagens-datas.txt","r");
-    FILE *cod_viagens = fopen("viagens-cod.txt","r");
-    char line[1024];
-    char aux[128];
-    int i=0;
+int getlinecode(char *line){
     int j;
-    int option;
-    Viagem new_node= malloc(sizeof(Viagem_node));
-
-    printf("Adquirir uma viagem\n");
-
-    while(fgets(line,1024,viagens)){
-        if(*line!='-'&&*line!='\n') {
-            ++i;
-            printf("(%d)",i);
-            j=0;
-            while(!isalpha(*(line+j))){
-                ++j;
-            }
-            while(*(line+j)) {
-                printf("%c",*(line+j));
-                ++j;
-            }
+    int n;
+    char out[128];
+    if( isdigit(*line) ){
+        n=0;
+        j=0;
+        cleanstr(out);
+        while( *(line+j)!=' ' ){
+            out[0]=*(line+j);
+            n=n*10+atoi(out);
+            ++j;
         }
+        return n;
     }
+    return 0;
+}
 
-    printf("\nInsira uma viagem: ");
-    scanf("%d",&option);
-
-    if(option>i || option< 1) {
-        clrscr();
-        printf("Viagem invalida!\n\n");
-        menu_1();
+int getlinename(char *line,char *aux){
+    int j,i;
+    if( isdigit(*line) ){
+        j=0;
+        i=0;
+        cleanstr(aux);
+        while( *(line+j)!='\n' ){
+            if( isalpha( *(line+j) ) ){
+                aux[i]= *(line+j);
+                ++i;
+            }
+            ++j;
+        }
+        aux[i]='\0';
+        return 1;
     }
+    return 0;
+}
 
-    j=1;
-    clrscr();
-    while(fgets(line,1024,cod_viagens)){
-        if(j==option) {
-            break;
-        }else ++j;
-    }
-
-    j=0;
-    while( *(line+j) ){
-        if( *(line+j) == ' ') break;
-        aux[j]=*(line+j);
-        ++j;
-    }
-
-    new_node->cod_destino=atoi(aux);
-    clrscr();
-
-    data:
-    i=0;
+void printlinedates(FILE file,char *line,char *aux,int n){
+    int i,code;
     fseek (viagens, 0L, SEEK_SET);
-    printf("Data:\n");
-    while(fgets(line,1024,viagens)){/*iterar linhas*/
-        if(*line!='-'&&*line!='\n'){
-            j=0;
-            clean_str(aux);
-            while(*(line+j)!=' '){
-                aux[j]=*(line+j);
-                ++j;
-            }
-            option = atoi(aux);/*codigo capturado*/
-            if(new_node->cod_destino == option) {
-                j=1;
-                fgets(line,1024,viagens);
-                while(*line != '\n'){/*Entrar seccao*/
-                    ++i;
-                    printf("%d)%c%c/%c%c/%c%c%c%c\n",i,line[1],line[2],line[3],line[4],line[5],line[6],line[7],line[8]);
-                    fgets(line,1024,viagens);
-                }
-            }
+    while(fgets(line,1024,file)){
+        code=getlinecode(line);
+        if(code==n) break;
+    }
+    int j;
+    fgets(line,1024,file);
+    while( *line!="\n" && fgets(line,1024,file) ){
+        cleanstr(aux);
+        j=1;
+        while( *(line+j)!='/' ) {
+            aux[j-1]=*(line+j);
+            ++j;
         }
+        aux[j-1]='\0';
+        printf(aux);
     }
-    printf("\nOpcao: ");
-    scanf("%d",&option);
-    if(option>i || option< 1) {
-        clrscr();
-        printf("Data invalida!\n\n");
-        goto data;
-    }
-
-
-
-
-
-    fclose(viagens);
-    fclose(cod_viagens);
 }
 
 int main()
@@ -156,14 +120,60 @@ int main()
     int option = menu_principal();
     switch(option) {
     /*(1)Adquirir uma viagem*/
-    case 1:
+    case 1: ;
+        FILE *viagens = fopen("viagens-datas.txt","r");
+        FILE *codigos = fopen("viagens-cod.txt","r");
         clrscr();
-        int out = menu_1();
 
+        char line[1024];
+        int out;
+        char aux[128];
+        int i,x1,x2;
+
+         /*print codes
+        clrscr();
+
+        while(fgets(line,1024,viagens)){
+            code=getlinecode(line);
+            if(code!=0)printf("%d\n",code);
+        }*/
+
+        /*Print destinos*/
+        clrscr();
+        fseek (viagens, 0L, SEEK_SET);
+        i=1;
+        printf("Adquirir uma viagem\nSelecione o seu destino\n");
+        while(fgets(line,1024,viagens)){
+            cleanstr(aux);
+            out=getlinename(line,aux);
+            if(out!=0){
+                printf("%d) %s\n",i,aux);
+                ++i;
+            }
+        }
+
+        printf("Opcao: ");
+        scanf("%d",&x1);
+
+
+
+        /*Print datas*/
+        clrscr();
+        i=1;
+        printf("Adquirir uma viagem\nSelecione a data\n");
+        printsectiondates(viagens,line,aux,x1);
+
+        printf("Opcao: ");
+        scanf("%d",&x2);
+
+        fclose(viagens);
+        fclose(codigos);
         break;
+
     /*(2)Colocar em fila de espera para uma viagem*/
-    case 2: ;
-        break;
+
+
+
     /*(3)Cancelar viagem*/
 
 
