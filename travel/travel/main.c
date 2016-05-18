@@ -151,6 +151,7 @@ int main()
     /*Menu*/
     int option = menu_principal();
     Viagem global_viagens = criarlista();
+    Viagem lista_de_espera
     FILE *viagens = fopen("viagens-datas.txt","r");
     char line[1024];
     clrscr();
@@ -197,9 +198,9 @@ int main()
 
     switch(option) {
     /*(1)Adquirir uma viagem*/
+        case 1:;
 
-
-
+            break;
     /*(2)Colocar em fila de espera para uma viagem*/
 
 
