@@ -179,6 +179,7 @@ int main()
     clrscr();
     int i;
     int aux_int;
+	char aux_char[128];
     int dest_code;
     int data;
     int lotacao;
@@ -240,7 +241,16 @@ int main()
     /*(1)Adquirir uma viagem*/
         case 1:
             clrscr();
-            
+            FILE *file = fopen("viagens-datas.txt","r");
+			i=1;
+			printf("Adquirir viagem\n");
+			while(fgets(line,1024,file)){
+					if( getlinename(line,aux_char)==1 ){
+							printf("(%d)%s\n",i,aux_char);
+							++i;
+					}
+			}
+			fclose(file);
             break;
     /*(2)Colocar em fila de espera para uma viagem*/
 
