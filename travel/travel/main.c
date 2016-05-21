@@ -147,7 +147,7 @@ Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,in
     }
 }
 
-Cliente insert_last_global(Cliente list,int data,int cod_destino,int id){
+Cliente insert_last_adq(Cliente list,int data,int cod_destino,int id){
     Cliente new_node = (Cliente) malloc( sizeof(Clientes_node) );
     Cliente lista_orig = list;
     new_node->data=data;
@@ -170,37 +170,25 @@ Cliente insert_last_global(Cliente list,int data,int cod_destino,int id){
     }
 }
 
-void createGlobalListFromFile(FILE *file, Viagem )
-
-int main()
-{
-    /*Menu*/
-    int option = menu_principal();
-    FILE *viagens = fopen("viagens-datas.txt","r");
-
-    /*Import dos dados*/
-    Viagem global_viagens = criarlista();
+Viagem createGlobalListFromFile(FILE *file, Viagem lista){
     char line[1024];
-    clrscr();
+    int dest_code;
+    char destino[128];
     int i;
     int aux_int;
 	char aux_char[128];
-    int dest_code;
-    char destino[128];
     int data;
     int lotacao;
     int disponiveis;
-
-    /*Obter dados de ficheiro*/
-    while(fgets(line,1024,viagens)){
+    Viagem lista_orig = lista;
+    while(fgets(line,1024,file)){
         /*entrar na seccao - codigo e destino*/
         if(isdigit(*line)){
             cleanstr(destino);
             dest_code=getlinecode(line);
             getlinename(line,destino);
-
             /*Datas*/
-            while(fgets(line,1024,viagens)){
+            while(fgets(line,1024,file)){
                 i=0;
                 if(*line=='-'){
                     aux_int=0;
@@ -231,13 +219,35 @@ int main()
                         ++i;
                     }
                     disponiveis=aux_int;
-
-                    global_viagens = insert_last_viagem(global_viagens,data,dest_code,destino,lotacao,disponiveis);
+                    lista = insert_last_viagem(lista,data,dest_code,destino,lotacao,disponiveis);
                 } else break;
             }
         }
     }
+    return lista;
+}
 
+Viagem destroilista_viagem(Viagem lista){
+    Viagem next;
+    while(lista!=NULL){
+        next=lista->next;
+        free(lista);
+        lista=next;
+    }
+    return NULL;
+}
+
+int main()
+{
+    /*Menu*/
+    int option = menu_principal();
+    FILE *viagens = fopen("viagens-datas.txt","r");
+
+    /*Import dos dados*/
+    Viagem global_viagens = criarlista();
+
+    global_viagens = createGlobalListFromFile(viagens, global_viagens);
+    print_list_viagem(global_viagens);
     fclose(viagens);
 
     /*Criar lista de viagens adquiridas*/
@@ -247,10 +257,10 @@ int main()
 
     switch(option) {
     /*(1)Adquirir uma viagem*/
-        case 1:
-            clrscr();
-            print_list_viagem(global_viagens);
-            break;
+        case 1:;
+            /*clrscr();
+            print_list_viagem(&global_viagens);
+            break;*/
     /*(2)Colocar em fila de espera para uma viagem*/
 
 
@@ -274,5 +284,9 @@ int main()
     /*(7)Listar Clientes*/
 
     }
+
+    global_viagens = destroilista_viagem(global_viagens);
+    print_list_viagem(global_viagens);
+
     return 0;
 }
