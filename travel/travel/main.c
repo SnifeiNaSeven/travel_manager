@@ -131,7 +131,7 @@ Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,int lotacao,int 
     new_node->data=data;
     if(lista==NULL){
         new_node->next=NULL;
-        new_node->prev=new_node;
+        new_node->prev=NULL;
         return new_node;
     } else {
         while(lista->next!=NULL){
@@ -144,23 +144,23 @@ Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,int lotacao,int 
     }
 }
 
-Cliente insert_last_global(Cliente lista,int data,int cod_destino,int id){
+Cliente insert_last_global(Cliente list,int data,int cod_destino,int id){
     Cliente new_node = (Cliente) malloc( sizeof(Clientes_node) );
-    Cliente lista_orig = lista;
+    Cliente lista_orig = list;
     new_node->data=data;
     new_node->cod_destino=cod_destino;
     new_node->id=id;
-    if(lista==NULL){
+    if(list==NULL){
         new_node->next=NULL;
-        new_node->prev=new_node;
+        new_node->prev=NULL;
         /*diminuir lugar disponiveis + procurar na lista de viagens destino->data*/
         return new_node;
     } else {
-        while(lista->next!=NULL){
-            lista=lista->next;
+        while(list->next!=NULL){
+            list=list->next;
         }
-        lista->next=new_node;
-        new_node->prev=lista;
+        new_node->prev=list;
+        list->next=new_node;
         new_node->next=NULL;
         /*diminuir lugar disponiveis + procurar na lista de viagens destino->data*/
         return lista_orig;
