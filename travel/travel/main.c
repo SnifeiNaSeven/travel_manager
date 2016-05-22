@@ -277,6 +277,7 @@ int choose_list_viagem_destinos(Viagem lista){
 int main()
 {
     /*Menu*/
+    int x1,x2;
     int option = menu_principal();
     FILE *viagens = fopen("viagens-datas.txt","r");
 
@@ -296,7 +297,8 @@ int main()
         case 1:
             clrscr();
             printf("Aquirir Viagem\n");
-            option=choose_list_viagem_destinos(global_viagens);
+            x1=choose_list_viagem_destinos(global_viagens);
+
             break;
     /*(2)Colocar em fila de espera para uma viagem*/
 
