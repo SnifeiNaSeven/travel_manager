@@ -222,6 +222,7 @@ Viagem createGlobalListFromFile(FILE *file, Viagem lista){
                     }
                     disponiveis=aux_int;
                     lista = insert_last_viagem(lista,data,dest_code,destino,lotacao,disponiveis);
+
                 } else break;
             }
         }
@@ -264,12 +265,58 @@ int choose_list_viagem_destinos(Viagem lista){
     printf("Option: ");
     fgets (input, 128, stdin);
     in=atoi(input);
-    if( isdigit(*input) && strlen(input)==2 && in<i-1 && in>0 ){
+    if( isdigit(*input) && strlen(input)==2 && in<i+1 && in>0 ){
         return in;
     } else {
         clrscr();
         printf("Opcao Invalida!\n\n");
         choose_list_viagem_destinos(lista_orig);
+    }
+    return in;
+}
+
+int choose_list_viagem_data(Viagem lista,int x){
+    /*Chage it*/
+    printf("Datas:\n");
+    Viagem lista_orig=lista;
+    int a=0;
+    int i=1;
+    int in;
+    int dia,ano,mes,data;
+    char input[128];
+    int prev_int;
+
+        while(lista!=NULL){
+            if( lista->cod_destino != prev_int ){
+                ++a;
+                if( x==a ) break;
+            }
+            prev_int=lista->cod_destino;
+            lista=lista->next;
+        }
+        prev_int=lista->cod_destino;
+        while( lista != NULL && lista->cod_destino == prev_int ){
+            data = lista->data;
+            ano = data % 10000;
+            data = (data - ano) / 10000;
+            mes = data % 100;
+            data = (data - mes) / 100;
+            dia = data % 100;
+            printf("(%d)%d-%d-%d\n",i,dia,mes,ano);
+            ++i;
+            lista=lista->next;
+        }
+
+    printf("\n");
+    printf("Option: ");
+    fgets (input, 128, stdin);
+    in=atoi(input);
+    if( isdigit(*input) && strlen(input)==2 && in<i-1 && in>0 ){
+        return in;
+    } else {
+        clrscr();
+        printf("Opcao Invalida!\n\n");
+        choose_list_viagem_data(lista_orig,x);
     }
     return in;
 }
@@ -298,7 +345,9 @@ int main()
             clrscr();
             printf("Aquirir Viagem\n");
             x1=choose_list_viagem_destinos(global_viagens);
-
+            clrscr();
+            printf("Aquirir Viagem\n");
+            x2=choose_list_viagem_data(global_viagens,x1);
             break;
     /*(2)Colocar em fila de espera para uma viagem*/
 
