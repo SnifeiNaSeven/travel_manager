@@ -65,12 +65,14 @@ int menu_principal(void) {
     cleanstr(op);
     fgets (op, 128, stdin);
     c=atoi(op);
-    if(c==0 || c>7 || c<1 ){
+    if( isdigit(*op) && strlen(op)==2 && c<8 && c>0 ){
+        return c;
+    } else {
         clrscr();
         printf("Opcao Invalida!\n\n");
         menu_principal();
     }
-    return c;
+
 }
 
 int getlinecode(char *line){
@@ -237,6 +239,41 @@ Viagem destroilista_viagem(Viagem lista){
     return NULL;
 }
 
+int choose_list_viagem_destinos(Viagem lista){
+    printf("Viagens:\n");
+    Viagem lista_orig=lista;
+    int i=1;
+    int in;
+    char input[128];
+    char prev_char[128];
+    if( lista==NULL ){
+        printf("NULL\n");
+    }else{
+        while(lista!=NULL){
+            if( strcmp(prev_char,lista->destino)==0 ){
+                strcpy(prev_char,lista->destino);
+            }else{
+                printf("(%d)%s\n",i,lista->destino);
+                ++i;
+                strcpy(prev_char,lista->destino);
+            }
+            lista=lista->next;
+        }
+    }
+    printf("\n");
+    printf("Option: ");
+    fgets (input, 128, stdin);
+    in=atoi(input);
+    if( isdigit(*input) && strlen(input)==2 && in<i-1 && in>0 ){
+        return in;
+    } else {
+        clrscr();
+        printf("Opcao Invalida!\n\n");
+        choose_list_viagem_destinos(lista_orig);
+    }
+    return in;
+}
+
 int main()
 {
     /*Menu*/
@@ -247,7 +284,6 @@ int main()
     Viagem global_viagens = criarlista();
 
     global_viagens = createGlobalListFromFile(viagens, global_viagens);
-    print_list_viagem(global_viagens);
     fclose(viagens);
 
     /*Criar lista de viagens adquiridas*/
@@ -257,10 +293,11 @@ int main()
 
     switch(option) {
     /*(1)Adquirir uma viagem*/
-        case 1:;
-            /*clrscr();
-            print_list_viagem(&global_viagens);
-            break;*/
+        case 1:
+            clrscr();
+            printf("Aquirir Viagem\n");
+            option=choose_list_viagem_destinos(global_viagens);
+            break;
     /*(2)Colocar em fila de espera para uma viagem*/
 
 
