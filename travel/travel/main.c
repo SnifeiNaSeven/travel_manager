@@ -16,25 +16,20 @@ typedef struct viagem_node *Viagem;
 typedef struct viagem_node {
     int data;
     int cod_destino;
-    int lotacao;
     int disponiveis;
     char destino[128];
     Viagem next;
-    Viagem prev;
 } Viagem_node;
 
 typedef struct clientes_node *Cliente;
 
-/*FIX: remover prev*/
-/*FIX: remover lotacao*/
 typedef struct clientes_node {
     int data;
     char destino[128];
     int cod_destino;
     int id;
-    char nome;
+    char nome[128];
     Cliente next;
-    Viagem prev;
 } Clientes_node;
 
 void cleanstr(char *out){
@@ -48,8 +43,8 @@ Viagem criarlista(void){
 Viagem createGlobalListFromFile(FILE *file, Viagem lista);
 Cliente createAdquiridaListFromFile(FILE *file, Cliente lista);/*Fix: por fazer*/
 Cliente createEsperaListFromFile(FILE *file, Cliente lista);/*Fix: por fazer*/
-Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,int lotacao,int disponiveis);
-Cliente insert_last_adq(int option,Cliente list,int data,char *destino,int cod_destino,int id);
+Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,int disponiveis);
+Cliente insert_last_adq(int option,Viagem global,Cliente adq,Cliente esp,int data,char *destino,int cod_destino,int id,char *nome);
 int choose_list_viagem_destinos(Viagem lista,char *destino);
 int choose_list_viagem_data(Viagem lista,int x);
 int choose_list_cliente_destinos(Cliente lista);
@@ -68,13 +63,12 @@ Viagem print_destino_from_cod(Viagem lista,int cod);
 
 int main(){
     /*Import de ficheiros para listas*/
-    /*Fix: Adicionar nomes de clientes*/
+
     FILE *viagens = fopen("viagens-datas.txt","r");
     Viagem global_viagens = (Viagem)criarlista();
     global_viagens = createGlobalListFromFile(viagens, global_viagens);
     fclose(viagens);
 
-    /*Fix: criar ficheiro*/
     /*Fix: criar funcao ficheiro para lista*/
     /*Fix: Adicionar nomes de clientes*/
     /*FILE *adquiridas = fopen("viagens-adquiridas.txt","r");*/
@@ -83,7 +77,7 @@ int main(){
     /*createAdquiridaListFromFile(*adquiridas, adq);
     fclose(adquiridas);*/
 
-    /*Fix: criar ficheiro*/
+    /*Fix: Adicionar nomes de clientes*/
     /*Fix: criar funcao ficheiro para lista*/
     /*FILE *espera = fopen("viagens-espera.txt","r");*/
     Cliente esp;
@@ -246,22 +240,12 @@ Viagem createGlobalListFromFile(FILE *file, Viagem lista){
                     }
 
                     aux_int=0;
-                    while( *(line+i)!= ' ' ){
-                        aux_int = aux_int * 10 + *(line+i) - '0';
-                        ++i;
-                    }
-                    lotacao=aux_int;
-                    while( !isdigit( *(line+i) ) ){
-                        ++i;
-                    }
-
-                    aux_int=0;
                     while( *(line+i)!= '\n' && *(line+i) != '\0' ){
                         aux_int = aux_int * 10 + *(line+i) - '0';
                         ++i;
                     }
                     disponiveis=aux_int;
-                    lista = insert_last_viagem(lista,data,dest_code,destino,lotacao,disponiveis);
+                    lista = insert_last_viagem(lista,data,dest_code,destino,disponiveis);
 
                 } else break;
             }
@@ -270,52 +254,98 @@ Viagem createGlobalListFromFile(FILE *file, Viagem lista){
     return lista;
 }
 
-Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,int lotacao,int disponiveis){
+Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,int disponiveis){
     Viagem new_node = (Viagem) malloc( sizeof(Viagem_node) );
     Viagem lista_orig = lista;
-    new_node->lotacao=lotacao;
     new_node->disponiveis=disponiveis;
     new_node->cod_destino=cod_destino;
     new_node->data=data;
     strcpy(new_node->destino,destino);
     if(lista==NULL){
         new_node->next=NULL;
-        new_node->prev=NULL;
         return new_node;
     } else {
         while(lista->next!=NULL){
             lista=lista->next;
         }
         lista->next=new_node;
-        new_node->prev=lista;
         new_node->next=NULL;
         return lista_orig;
     }
 }
 
-Cliente insert_last_adq(int option,Cliente list,int data,char *destino,int cod_destino,int id){
-    /*Fix: Se nao houver vagas por em adq lista de espera*/
-    /*FIX: option: 0->adq 1->esp*/
+void diminuir_disp(Viagem global,int data,int code){
+    while( global!=NULL ){
+        if( global->cod_destino==code && global->data==data ){
+            global->disponiveis=global->disponiveis - 1;
+        }
+        global=global->next;
+    }
+}
+
+int get_viagens_disp_destino(Viagem global,int data,int code){
+    while( global!=NULL ){
+        if( global->cod_destino==code && global->data==data ){
+            return global->disponiveis;
+        }
+        global=global->next;
+    }
+}
+
+Cliente insert_last_adq(int option,Viagem global,Cliente adq,Cliente esp,int data,char *destino,int cod_destino,int id,char *nome){
+    /*FIX: Caso quando full*/
     Cliente new_node = (Cliente) malloc( sizeof(Clientes_node) );
-    Cliente lista_orig = list;
+    Cliente adq_orig = adq;
+    Cliente esp_orig = esp;
     new_node->data=data;
     new_node->cod_destino=cod_destino;
     new_node->id=id;
     strcpy(new_node->destino,destino);
-    if(list==NULL){
-        new_node->next=NULL;
-        new_node->prev=NULL;
-        /*Fix: diminuir lugar disponiveis + procurar na lista de viagens destino->data*/
-        return new_node;
-    } else {
-        while(list->next!=NULL){
-            list=list->next;
-        }
-        new_node->prev=list;
-        list->next=new_node;
-        new_node->next=NULL;
-        /*Fix: diminuir lugar disponiveis + procurar na lista de viagens destino->data*/
-        return lista_orig;
+    strcpy(new_node->nome,nome);
+    switch( option ){
+        case 0:
+            if(adq==NULL){
+                new_node->next=NULL;
+                if(option==0){
+                    diminuir_disp(global,data,cod_destino);
+                }
+                return new_node;
+            } else if( get_viagens_disp_destino(global,data,cod_destino) > 0 ){
+                while(adq->next!=NULL){
+                    adq=adq->next;
+                }
+                adq->next=new_node;
+                new_node->next=NULL;
+                diminuir_disp(global,data,cod_destino);
+                return adq_orig;
+            } else if( get_viagens_disp_destino(global,data,cod_destino)==0 ){
+                /*FIX: Not workin*/
+                if(esp==NULL){
+                    new_node->next=NULL;
+                    esp=new_node;
+                }else{
+                    while(esp->next!=NULL){
+                        esp=esp->next;
+                    }
+                    esp->next=new_node;
+                    new_node->next=NULL;
+                    return adq_orig;
+                }
+            }
+            break;
+        case 1:
+            if(esp==NULL){
+                    new_node->next=NULL;
+                    return new_node;
+                }else{
+                    while(esp->next!=NULL){
+                        esp=esp->next;
+                    }
+                    esp->next=new_node;
+                    new_node->next=NULL;
+                    return esp_orig;
+                }
+            break;
     }
 }
 
@@ -356,7 +386,6 @@ void print_list_viagem(Viagem lista){
     }else{
         while(lista!=NULL){
             printf("destino: %d %s\n",lista->cod_destino,lista->destino);
-            printf("Lotacao: %d\n",lista->lotacao);
             printf("Disponiveis: %d\n",lista->disponiveis);
             printf("data: %d\n",lista->data);
             printf("\n");
@@ -372,7 +401,8 @@ void print_list_cliente(Cliente lista){
         printf("NULL\n");
     }else{
         while(lista!=NULL){
-            printf("cliente: %d\n",lista->id);
+            printf("numero cc: %d\n",lista->id);
+            printf("nome: %s",lista->nome);
             printf("destino: %s\n",lista->destino);
             printf("code: %d\n",lista->cod_destino);
             printf("data: %d\n",lista->data);
@@ -404,6 +434,7 @@ int in_arr_int(int *arr,int i,int size){
 
 void print_clientes(Cliente adq,Cliente esp){
     int int_arr[128];
+    char *cl_arr[128];
     int j=0;
     int i=0;
     int id;
@@ -411,12 +442,13 @@ void print_clientes(Cliente adq,Cliente esp){
         id=adq->id;
         if( in_arr_int(int_arr,id,i)==0 ){
             int_arr[i]=id;
+            cl_arr[i]=adq->nome;
             ++i;
         }
         adq=adq->next;
     }
     while( j<i ){
-        printf("-> %d\n",int_arr[j]);
+        printf("-> %d %s\n",int_arr[j],cl_arr[j]);
         ++j;
     }
 }
@@ -534,6 +566,24 @@ void print_viagens_cliente_mais_recentes(Viagem lista, int cliente){
     }
 }
 
+int get_nome_from_id(Cliente adq,Cliente esp,int cliente,char *nome){
+    while( adq!=NULL ){
+        if( adq->id==cliente ){
+            strcpy(nome,adq->nome);
+            return 0;
+        }
+        adq=adq->next;
+    }
+    while( esp!=NULL ){
+        if( esp->id==cliente ){
+            strcpy(nome,esp->nome);
+            return 0;
+        }
+        esp=esp->next;
+    }
+    return 1;
+}
+
 void print_cliente_adq(Cliente adq,Cliente esp, int cliente, Viagem lista){
     int dia,mes,ano,data;
     int codes_1[128];
@@ -543,6 +593,8 @@ void print_cliente_adq(Cliente adq,Cliente esp, int cliente, Viagem lista){
     int esp_arr[128];
     int i2=0;
     int j=0;
+    char nome[128];
+    if( get_nome_from_id(adq,esp,cliente,nome)== 1)printf("Cliente nao encontrado\n");
     printf("Viagens e datas respetivas\n");
     if(adq!=NULL) printf("\nAdquiridas:\n");
     while( adq!=NULL ){
@@ -587,8 +639,20 @@ void print_cliente_adq(Cliente adq,Cliente esp, int cliente, Viagem lista){
     getchar();
 }
 
+void clean_input(void){
+    int ch;
+    while ((ch=getchar()) != EOF && ch != '\n') ;
+}
+
+void remove_return(char *in,char *out){
+    int i=0;
+    while( in[i]!='\n' ){
+        out[i]=in[i];
+        ++i;
+    }
+}
+
 int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
-    /*Fix: mudar texto de saida - qualquer tecla para voltar*/
     /*
     Menu
     (1)Adquirir uma viagem
@@ -602,7 +666,9 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
 
     char op[128];
     int option,cod,data,id;
+    char nome[128];
     char destino[128];
+    char aux[128];
 
     printf("Menu\n");
     printf("(1)Adquirir uma viagem\n");
@@ -639,9 +705,16 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
             clrscr();
             printf("Aquirir Viagem\n");
             printf("Numero cartao do cidadao: ");
-            scanf("%d",&id);
-            adq = insert_last_adq(0,adq,data,destino,cod,id);
-            getchar();
+            fgets (nome, 128, stdin);
+            id=atoi(nome);
+            if( get_nome_from_id(adq,esp,id,nome)==1 ){
+                printf("Nome: ");
+                cleanstr(nome);
+                fgets (nome, 128, stdin);
+            }
+            remove_return(nome,aux);
+            strcpy(nome,aux);
+            adq = insert_last_adq(0,global_viagens,adq,esp,data,destino,cod,id,nome);
             break;
     /*(2)Colocar em fila de espera para uma viagem*/
         case 2:
@@ -654,9 +727,16 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
             clrscr();
             printf("Aquirir Viagem\n");
             printf("Numero cartao do cidadao: ");
-            scanf("%d",&id);
-            esp = insert_last_adq(1,esp,data,destino,cod,id);
-            getchar();
+            fgets (nome, 128, stdin);
+            id=atoi(nome);
+            if( get_nome_from_id(adq,esp,id,nome)==1 ){
+                printf("Nome: ");
+                cleanstr(nome);
+                fgets (nome, 128, stdin);
+            }
+            remove_return(nome,aux);
+            strcpy(nome,aux);
+            esp = insert_last_adq(1,global_viagens,adq,esp,data,destino,cod,id,nome);
             break;
         /*(3)Cancelar viagem*/
         case 3:
@@ -673,36 +753,37 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
             clrscr();
             printf("Listar viagens de um destino\n");
             print_viagens_mais_recentes(global_viagens,cod);
-            getchar();
+            clean_input();
             break;
         /*(6)Listar viagens de um cliente*/
         case 6:
             /*Fix: proteger input*/
-            /*Fix: Imprimir nome de cliente*/
             clrscr();
             printf("Listar viagens de cliente\n");
             printf("Numero cartao do cidadao: ");
-            scanf("%d",&id);
+            fgets (nome, 128, stdin);
+            id=atoi(nome);
             clrscr();
             print_cliente_adq(adq,esp,id,global_viagens);
-            getchar();
             break;
         /*(7)Listar clientes*/
         case 7:
-            /*Fix: Adicionar nomes de clientes*/
             clrscr();
             printf("Lista de clientes\n");
             print_clientes(adq,esp);
-            getchar();
+            clean_input();
+            break;
         case 8:
+            return 0;
             break;
     }
     clrscr();
     cleanstr(op);
-    printf("Deseja voltar?\n(S)para voltar ou qualquer outra tecla para sair\n");
+    printf("Deseja voltar?\n(S ou Enter)para voltar ou qualquer outra tecla para sair\n");
     printf("Opcao: ");
     fgets (op, 128, stdin);
-    if( strlen(op)==2 && (*op=='S' || *op=='s') ){
+    printf("%s",op);
+    if( (strlen(op)==2 && (*op=='S' || *op=='s') || *op=='\n') ){
         clrscr();
         menu_principal(global_viagens,adq,esp);
     }else return 0;
