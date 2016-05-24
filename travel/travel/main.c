@@ -218,12 +218,10 @@ Viagem createGlobalListFromFile(FILE *file, Viagem lista){
     int lotacao;
     int disponiveis;
     while(fgets(line,1024,file)){
-        /*entrar na seccao - codigo e destino*/
         if(isdigit(*line)){
             cleanstr(destino);
             dest_code=getlinecode(line);
             getlinename(line,destino);
-            /*Datas*/
             while(fgets(line,1024,file)){
                 i=0;
                 if(*line=='-'){
@@ -451,6 +449,20 @@ void print_clientes(Cliente adq,Cliente esp){
         printf("-> %d %s\n",int_arr[j],cl_arr[j]);
         ++j;
     }
+
+    while( esp!=NULL ){
+        id=esp->id;
+        if( in_arr_int(int_arr,id,i)==0 ){
+            int_arr[i]=id;
+            cl_arr[i]=esp->nome;
+            ++i;
+        }
+        esp=esp->next;
+    }
+    while( j<i ){
+        printf("-> %d %s\n",int_arr[j],cl_arr[j]);
+        ++j;
+    }
 }
 
 void data_to_dia_mes_ano(int data, int *dia, int *mes, int *ano){
@@ -588,10 +600,9 @@ void print_cliente_adq(Cliente adq,Cliente esp, int cliente, Viagem lista){
     int dia,mes,ano,data;
     int codes_1[128];
     int adq_arr[128];
-    int i1=0;
+    int i=0;
     int codes_2[128];
     int esp_arr[128];
-    int i2=0;
     int j=0;
     char nome[128];
     if( get_nome_from_id(adq,esp,cliente,nome)== 1)printf("Cliente nao encontrado\n");
@@ -599,18 +610,18 @@ void print_cliente_adq(Cliente adq,Cliente esp, int cliente, Viagem lista){
     if(adq!=NULL) printf("\nAdquiridas:\n");
     while( adq!=NULL ){
         if( adq->id == cliente ){
-            adq_arr[i1]=data_invert(adq->data);
-            codes_1[i1]=adq->cod_destino;
-            ++i1;
+            adq_arr[i]=data_invert(adq->data);
+            codes_1[i]=adq->cod_destino;
+            ++i;
         }
         adq=adq->next;
     }
-    bubblesort_viagens(adq_arr,codes_1,i1);
-    while( j<i1 ){
+    bubblesort_viagens(adq_arr,codes_1,i);
+    while( j<i ){
         data=adq_arr[j];
         data=data_fix(data);
         data_to_dia_mes_ano(data,&dia,&mes,&ano);
-        printf("-> ");
+        printf("(%d) ",j+1);
         print_destino_from_cod(lista,codes_1[j]);
         printf(" / %d-%d-%d\n",dia,mes,ano);
         ++j;
@@ -618,25 +629,25 @@ void print_cliente_adq(Cliente adq,Cliente esp, int cliente, Viagem lista){
 
     if(esp!=NULL) printf("\nViagens em lista de espera:\n");
     j=0;
+    i=0;
     while( esp!=NULL ){
         if( esp->id == cliente ){
-            esp_arr[i2]=data_invert(esp->data);
-            codes_2[i2]=esp->cod_destino;
-            ++i2;
+            esp_arr[i]=data_invert(esp->data);
+            codes_2[i]=esp->cod_destino;
+            ++i;
         }
         esp=esp->next;
     }
-    bubblesort_viagens(esp_arr,codes_2,i2);
-    while( j<i2 ){
+    bubblesort_viagens(esp_arr,codes_2,i);
+    while( j<i ){
         data=esp_arr[j];
         data=data_fix(data);
         data_to_dia_mes_ano(data,&dia,&mes,&ano);
-        printf("-> ");
+        printf("(%d) ",j+1);
         print_destino_from_cod(lista,codes_2[j]);
         printf(" / %d-%d-%d\n",dia,mes,ano);
         ++j;
     }
-    getchar();
 }
 
 void clean_input(void){
@@ -653,17 +664,6 @@ void remove_return(char *in,char *out){
 }
 
 int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
-    /*
-    Menu
-    (1)Adquirir uma viagem
-    (2)Colocar em fila de espera para uma viagem
-    (3)Cancelar viagem
-    (4)Cancelar pedido em fila de espera
-    (5)Listar viagens de um destino
-    (6)Listar viagens de um cliente
-    (7)Listar Clientes
-    */
-
     char op[128];
     int option,cod,data,id;
     char nome[128];
@@ -718,6 +718,7 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
             break;
     /*(2)Colocar em fila de espera para uma viagem*/
         case 2:
+            /*FIX: Proteger input*/
             clrscr();
             printf("Aquirir Viagem\n");
             cod=choose_list_viagem_destinos(global_viagens,destino);
@@ -740,6 +741,7 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
             break;
         /*(3)Cancelar viagem*/
         case 3:
+            /*cancelar_viagem(Viagem global,Cliente adq,Cliente esp,id);*/
             break;
         /*(4)Cancelar pedido em fila de espera*/
         case 4:
@@ -765,9 +767,11 @@ int menu_principal(Viagem global_viagens,Cliente adq,Cliente esp) {
             id=atoi(nome);
             clrscr();
             print_cliente_adq(adq,esp,id,global_viagens);
+            clean_input();
             break;
         /*(7)Listar clientes*/
         case 7:
+            /*FIX: Nao lista clientes so em espera*/
             clrscr();
             printf("Lista de clientes\n");
             print_clientes(adq,esp);
