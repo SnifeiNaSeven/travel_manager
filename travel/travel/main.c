@@ -662,8 +662,7 @@ void remove_return(char *in,char *out){
     }
 }
 
-pCliente cancelar_viagem(Viagem global,pCliente adq,pCliente esp,int id){
-    /*FIX:Change start of adq*/
+pCliente cancelar_viagem(Viagem global,pCliente adq,pCliente esp,int id,int *out){
     char op[128];
     char nome[128];
     char destino[128];
@@ -681,40 +680,9 @@ pCliente cancelar_viagem(Viagem global,pCliente adq,pCliente esp,int id){
     } else {
         clrscr();
         printf("Opcao Invalida!\n\n");
-        return cancelar_viagem(global,adq,esp,id);
+        return cancelar_viagem(global,adq,esp,id,&out);
     }
-
-    while( adq!=NULL ){
-        if(i==option){
-            printf("\n\nIN\n\n");
-            code=adq->cod_destino;
-            data=adq->data;
-            free(adq);
-            /*ERROR*/
-            /*prev_node->next=next_node;*/
-            printf("next_node:%d",next_node);
-            printf("i:%d",i);
-            clean_input();
-
-            /*esp=aumentar_disp(global,esp,data,code);
-            if(esp!=NULL){
-                code=esp->cod_destino;
-                data=esp->data;
-                strcpy(destino,esp->destino);
-                cc=esp->id;
-                strcpy(nome,esp->nome);
-                insert_last_adq(0,global,adq,esp,data,destino,code,cc,nome);
-            }
-            return esp;*/
-        }
-        if( adq->id==id )++i;
-        prev_node=adq;
-        adq=adq->next;
-        if(adq!=NULL){
-            next_node=adq->next;
-        }else next_node=NULL;
-    }
-    return esp_org;
+    /*COMPLETAR*/
 }
 
 int menu_principal(Viagem global_viagens,pCliente adq,pCliente esp) {
@@ -820,7 +788,7 @@ int menu_principal(Viagem global_viagens,pCliente adq,pCliente esp) {
                 break;
             }
             clrscr();
-            esp=cancelar_viagem(global_viagens,adq,esp,id);
+            esp=cancelar_viagem(global_viagens,adq,esp,id,&aux_int);
             break;
         /*(4)Cancelar pedido em fila de espera*/
         case 4:
