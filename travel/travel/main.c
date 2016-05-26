@@ -74,42 +74,6 @@ int main(){
     return 0;
 }
 
-int choose_list_cliente_destinos(pCliente lista){
-    printf("Viagens:\n");
-    pCliente lista_orig=lista;
-    int cliente_arr[128];
-    int i=1;
-    int in;
-    char input[128];
-    char prev_char[128];
-    if( lista==NULL ){
-        printf("NULL\n");
-    }else{
-        while(lista!=NULL){
-            if( strcmp(prev_char,lista->destino)==0 ){
-                strcpy(prev_char,lista->destino);
-            }else{
-                printf("(%d)%s\n",i,lista->destino);
-                cliente_arr[i-1]=lista->cod_destino;
-                ++i;
-                strcpy(prev_char,lista->destino);
-            }
-            lista=lista->next;
-        }
-    }
-    printf("\n");
-    printf("Opcao: ");
-    fgets (input, 128, stdin);
-    in=atoi(input);
-    if( isdigit(*input) && strlen(input)==2 && in<i && in>0 ){
-        return cliente_arr[in-1];
-    } else {
-        clrscr();
-        printf("Opcao Invalida!\n\n");
-        choose_list_cliente_destinos(lista_orig);
-    }
-}
-
 int choose_list_viagem_data(Viagem lista,int x){
     char destino[128];
     get_destino_from_cod(lista,x,destino);
