@@ -211,6 +211,10 @@ Viagem createGlobalListFromFile(FILE *file, Viagem lista){
             }
         }
     }
+    if(lista==NULL){
+        printf("Ficheiro de viagens vazio!\n");
+        clean_input();
+    }
     return lista;
 }
 
@@ -234,13 +238,15 @@ Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,in
     }
 }
 
-void diminuir_disp(Viagem global,int data,int code){
-    while( global!=NULL ){
-        if( global->cod_destino==code && global->data==data ){
-            global->disponiveis=global->disponiveis - 1;
+void diminuir_disp(Viagem *global,int data,int code){
+    pCliente *global_org=*global;
+    while( (*global)!=NULL ){
+        if( (*global)->cod_destino==code && (*global)->data==data ){
+            (*global)->disponiveis=(*global)->disponiveis - 1;
         }
-        global=global->next;
+        (*global)=(*global)->next;
     }
+    *global=global_org;
 }
 
 pCliente aumentar_disp(Viagem global,pCliente esp,int data,int code){
@@ -261,66 +267,52 @@ pCliente aumentar_disp(Viagem global,pCliente esp,int data,int code){
     return esp_org;
 }
 
-int get_viagens_disp_destino(Viagem global,int data,int code){
-    while( global!=NULL ){
-        if( global->cod_destino==code && global->data==data ){
-            return global->disponiveis;
+int get_viagens_disp_destino(Viagem *global,int data,int code){
+    Viagem lista_org=global;
+    while( (*global)!=NULL ){
+        if( (*global)->cod_destino==code && (*global)->data==data ){
+            return (*global)->disponiveis;
         }
-        global=global->next;
+        (*global)=(*global)->next;
     }
+    *global=lista_org;
 }
 
-pCliente enqueue(pCliente lista,pCliente aux_node){
+void enqueue(pCliente *lista,int data,int cod_destino,int id,char *destino,char *nome){
     pCliente new_node = (pCliente) malloc( sizeof(Clientes_node) );
-    new_node->cod_destino=aux_node->cod_destino;
-    new_node->data=aux_node->data;
-    strcpy(new_node->destino,aux_node->destino);
-    new_node->id=aux_node->id;
-    strcpy(new_node->nome,aux_node->nome);
-
-    pCliente lista_org=lista;
-    if(lista==NULL){
+    new_node->cod_destino=cod_destino;
+    new_node->data=data;
+    strcpy(new_node->destino,destino);
+    new_node->id=id;
+    strcpy(new_node->nome,nome);
+    pCliente *lista_org=*lista;
+    if(*lista==NULL){
         new_node->next=NULL;
-        return new_node;
+        *lista= new_node;
     } else {
-        while(lista->next!=NULL){
-            lista=lista->next;
+        while( (*lista)->next!=NULL ){
+            (*lista)=(*lista)->next;
         }
-        lista->next=new_node;
+        (*lista)->next=new_node;
         new_node->next=NULL;
-        return lista_org;
+        *lista= lista_org;
     }
 }
 
 void insert_last_adq(int option,Viagem *global,pCliente *adq,pCliente *esp,int data,char *destino,int cod_destino,int id,char *nome){
-    /*HERE*/
-    pCliente *aux_node = (pCliente) malloc( sizeof(Clientes_node) );
-    (*aux_node)->data=data;
-    (*aux_node)->cod_destino=cod_destino;
-    (*aux_node)->id=id;
-    strcpy((*aux_node)->destino,destino);
-    strcpy((*aux_node)->nome,nome);
     switch( option ){
         case 0:
-            if( get_viagens_disp_destino(&global,data,cod_destino) > 0 ){
+            if( get_viagens_disp_destino(global,data,cod_destino) > 0 ){
                 diminuir_disp(global,data,cod_destino);
-                *aux_node=enqueue(&adq,aux_node);
-                *adq=aux_node;
+                enqueue(adq,data,cod_destino,id,destino,nome);
             } else if( get_viagens_disp_destino(global,data,cod_destino)==0 ){
-                /*out=1;
-                out_node=enqueue(esp,aux_node);
-                free(aux_node);
-                return out_node;*/
+                enqueue(esp,data,cod_destino,id,destino,nome);
             }
-            break;/*
+            break;
         case 1:
-            *out = 1;
-            out_node=enqueue(esp,aux_node);
-            free(aux_node);
-            return out_node;*/
+            enqueue(esp,data,cod_destino,id,destino,nome);
             break;
     }
-    /*free(aux_node);*/
 }
 
 int getlinename(char *line,char *aux){
@@ -373,11 +365,11 @@ void print_list_viagem(Viagem *lista){
 void print_list_cliente(pCliente *lista){
     pCliente *lista_org=*lista;
     if( *lista==NULL ){
-        printf("NULL\n");
+        printf("ADELNULL\n");
     }else{
         while(*lista!=NULL){
-            printf("numero cc: %d\n",(*lista)->id);
-            printf("nome: %s",(*lista)->nome);
+            printf("numero cc1: %d\n",(*lista)->id);
+            printf("nome: %s\n",(*lista)->nome);
             printf("destino: %s\n",(*lista)->destino);
             printf("code: %d\n",(*lista)->cod_destino);
             printf("data: %d\n",(*lista)->data);
@@ -472,10 +464,12 @@ int data_fix(int data){
 }
 
 void get_destino_from_cod(Viagem *lista,int cod,char *destino){
+    Viagem *lista_org=*lista;
     while( (*lista)->cod_destino != cod ){
         *lista=(*lista)->next;
     }
     strcpy(destino,(*lista)->destino);
+    *lista=lista_org;
 }
 
 void bubblesort_inv(int vect[], int n){
@@ -557,7 +551,8 @@ int get_nome_from_id(pCliente *adq,pCliente *esp,int cliente,char *nome){
     return 0;
 }
 
-int print_cliente_adq_adq(pCliente adq,pCliente esp, int cliente, Viagem lista){
+int print_cliente_adq_adq(pCliente *adq, int cliente, Viagem *lista){
+    /*HERE*/
     int adq_arr[128];
     int i=0;
     int j=0;
@@ -566,14 +561,14 @@ int print_cliente_adq_adq(pCliente adq,pCliente esp, int cliente, Viagem lista){
     int size=0;
     char destino[128];
 
-    if(adq!=NULL) printf("\nAdquiridas:\n");
-    while( adq!=NULL ){
-        if( adq->id == cliente ){
-            adq_arr[i]=data_invert(adq->data);
-            codes[i]=adq->cod_destino;
+    if( *adq!=NULL ) printf("\nAdquiridas:\n");
+    while( (*adq)!=NULL ){
+        if( (*adq)->id == cliente ){
+            adq_arr[i]=data_invert( (*adq)->data );
+            codes[i]= (*adq)->cod_destino;
             ++i;
         }
-        adq=adq->next;
+        (*adq)=(*adq)->next;
     }
     bubblesort_viagens(adq_arr,codes,i);
     while( j<i ){
@@ -581,12 +576,13 @@ int print_cliente_adq_adq(pCliente adq,pCliente esp, int cliente, Viagem lista){
         data=data_fix(data);
         data_to_dia_mes_ano(data,&dia,&mes,&ano);
         printf("(%d) ",j+1);
-        get_destino_from_cod(lista,codes[j],destino);
+        get_destino_from_cod(lista,codes[j],destino);/*FIX->done*/
         printf("%s\n",destino);
         printf(" / %d-%d-%d\n",dia,mes,ano);
         ++size;
         ++j;
     }
+    *li
     return size;
 }
 
@@ -656,17 +652,17 @@ pCliente dequeue(pCliente lista,pCliente aux_node){
     return next_node;
 }
 
-pCliente remover_viagem(Viagem global,pCliente adq,pCliente esp,int id,int *data,int *code){
+void remover_viagem(Viagem *global,pCliente *adq,pCliente *esp,int id,int *data,int *code){
     char op[128];
     char nome[128];
     char destino[128];
     int option,size,cc;
     int i=0;
     pCliente prev_node=NULL;
-    pCliente next_node=adq->next;
-    pCliente adq_org=adq;
+    pCliente *next_node=(*adq)->next;
+    pCliente *adq_org=*adq;
     printf("Cancelar Viagem\n");
-    size = print_cliente_adq_adq(adq,esp,id,global);
+    size = print_cliente_adq_adq(adq,esp,id,global); /*FIX->test*/
     printf("\nOpcao: ");
     fgets (op, 128, stdin);
     option=atoi(op);
@@ -674,28 +670,30 @@ pCliente remover_viagem(Viagem global,pCliente adq,pCliente esp,int id,int *data
     } else {
         clrscr();
         printf("Opcao Invalida!\n\n");
-        return remover_viagem(global,adq,esp,id,data,code);
+        remover_viagem(global,adq,esp,id,data,code);/*FIX*/
+        exit(0);/*Can cause trouble*/
     }
 
-    while(adq!=NULL){
-        if( adq->id == id ){
+    while( *adq!=NULL ){
+        if( (*adq)->id == id ){
             ++i;
             if( i==option ){
-                *data=adq->data;
-                *code=adq->cod_destino;
+                *data=(*adq)->data;
+                *code=(*adq)->cod_destino;
                 if( prev_node==NULL ){
-                    free(adq);
-                    return next_node;
+                    free(*adq);
+                    *adq=next_node;
+                    exit(0);/*Can cause trouble*/
                 }else{
-                    free(adq);
-                    prev_node->next=next_node;
+                    free(*adq);
+                    prev_node->next=(*next_node);
                     return adq_org;
                 }
             }
         }
         prev_node=adq;
-        adq=adq->next;
-        next_node=adq->next;
+        *adq=(*adq)->next;
+        *next_node=(*adq)->next;
     }
 }
 
@@ -740,11 +738,16 @@ pCliente remover_espera(Viagem global,pCliente esp,int id){
     }
 }
 
-int in_cliente(pCliente cliente,int id){
-    while( cliente!=NULL ){
-        if( cliente->id == id ) return 1;
-        cliente=cliente->next;
+int in_cliente(pCliente *cliente,int id){
+    pCliente *cliente_org=*cliente;
+    while( *cliente!=NULL ){
+        if( (*cliente)->id == id ){
+            *cliente=cliente_org;
+            return 1;
+        }
+        (*cliente)=(*cliente)->next;
     }
+    *cliente=cliente_org;
     return 0;
 }
 
@@ -839,24 +842,18 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
                     }
                 }
             }
-            /*HERE*/
-            /*insert_last_adq(0,&global_viagens,&adq,&esp,data,destino,cod,id,nome);*/
-            /*if( aux_int==0 ){
-                adq=aux_node;
-            } else if( aux_int==1 ){
-                esp=aux_node;
-            }*/
+            insert_last_adq(0,&global_viagens,&adq,&esp,data,destino,cod,id,nome);
             break;
 
     /*(2)Colocar em fila de espera para uma viagem*/
         case 2:
-            /*clrscr();
-            printf("Colocar viagem em fila de espera\n");
-            cleanstr(destino);
-            cod=choose_list_viagem_destinos(global_viagens,destino);
             clrscr();
             printf("Colocar viagem em fila de espera\n");
-            data=choose_list_viagem_data(global_viagens,cod);
+            cleanstr(destino);
+            cod=choose_list_viagem_destinos(&global_viagens,destino);
+            clrscr();
+            printf("Colocar viagem em fila de espera\n");
+            data=choose_list_viagem_data(&global_viagens,cod);
             clrscr();
             cond=1;
             while( cond==1 ){
@@ -873,7 +870,7 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
             }
             id=atoi(nome);
 
-            if( get_nome_from_id(adq,esp,id,nome)==0 ){
+            if( get_nome_from_id(&adq,&esp,id,nome)==0 ){
                 cond=1;
                 while( cond==1 ){
                     printf("Nome: ");
@@ -890,16 +887,11 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
                 }
             }
             remove_return(nome);
-            aux_node = insert_last_adq(1,global_viagens,adq,esp,data,destino,cod,id,nome,&aux_int);
-            if( aux_int==0 ){
-                adq=aux_node;
-            } else if( aux_int==1 ){
-                esp=aux_node;
-            }*/
+            insert_last_adq(1,&global_viagens,&adq,&esp,data,destino,cod,id,nome);
             break;
         /*(3)Cancelar viagem*/
         case 3:
-            /*clrscr();
+            clrscr();
             if( adq==NULL && esp==NULL ){
                 printf("Nao existem clientes no sistema\n");
                 clean_input();
@@ -920,14 +912,14 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
             }
 
             id=atoi(nome);
-            if( in_cliente(adq,id)==0 ){
+            if( in_cliente(&adq,id)==0 ){
                 printf("Cliente nao existe\n");
                 clean_input();
                 break;
             }
             clrscr();
-            adq=remover_viagem(global_viagens,adq,esp,id,&data,&cod);
-            if(esp!=NULL){
+            remover_viagem(&global_viagens,&adq,&esp,id,&data,&cod);
+            /*if(esp!=NULL){
                 esp=dequeue(esp,aux_node);
                 adq=enqueue(adq,aux_node);
             } else {
