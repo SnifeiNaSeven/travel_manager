@@ -4,38 +4,44 @@
 	<ActiveTarget name="Debug" />
 	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="14961" topLine="122" />
+			<Cursor1 position="1926" topLine="65" />
 		</Cursor>
 		<Folding>
 			<Collapse line="34" />
-			<Collapse line="78" />
-			<Collapse line="90" />
-			<Collapse line="132" />
-			<Collapse line="173" />
-			<Collapse line="220" />
-			<Collapse line="240" />
-			<Collapse line="251" />
-			<Collapse line="269" />
-			<Collapse line="280" />
-			<Collapse line="301" />
-			<Collapse line="336" />
-			<Collapse line="348" />
-			<Collapse line="364" />
-			<Collapse line="384" />
-			<Collapse line="393" />
-			<Collapse line="402" />
-			<Collapse line="437" />
-			<Collapse line="445" />
-			<Collapse line="453" />
-			<Collapse line="465" />
-			<Collapse line="474" />
-			<Collapse line="486" />
-			<Collapse line="504" />
-			<Collapse line="529" />
-			<Collapse line="620" />
-			<Collapse line="626" />
-			<Collapse line="631" />
-			<Collapse line="642" />
+			<Collapse line="87" />
+			<Collapse line="129" />
+			<Collapse line="170" />
+			<Collapse line="217" />
+			<Collapse line="237" />
+			<Collapse line="248" />
+			<Collapse line="260" />
+			<Collapse line="271" />
+			<Collapse line="292" />
+			<Collapse line="342" />
+			<Collapse line="358" />
+			<Collapse line="378" />
+			<Collapse line="387" />
+			<Collapse line="396" />
+			<Collapse line="439" />
+			<Collapse line="447" />
+			<Collapse line="455" />
+			<Collapse line="467" />
+			<Collapse line="476" />
+			<Collapse line="488" />
+			<Collapse line="506" />
+			<Collapse line="533" />
+			<Collapse line="557" />
+			<Collapse line="590" />
+			<Collapse line="624" />
+			<Collapse line="632" />
+			<Collapse line="637" />
+			<Collapse line="648" />
+			<Collapse line="689" />
+			<Collapse line="702" />
+			<Collapse line="712" />
+			<Collapse line="721" />
+			<Collapse line="759" />
+			<Collapse line="771" />
 		</Folding>
 	</File>
 </CodeBlocks_layout_file>
