@@ -32,140 +32,146 @@ typedef struct clientes_node {
     pCliente next;
 } Clientes_node;
 
-void cleanstr(char *out){
-    strcpy(out,"");
-}
-
-Viagem criarlista(void){
-    return NULL;
-}
-
+void cleanstr(char *out);
+pCliente createEsperaListFromFile(FILE *file, pCliente lista,pCliente adq,Viagem global);
+pCliente createAdquiridaListFromFile(FILE *file, pCliente lista,pCliente esp,Viagem global);
 Viagem createGlobalListFromFile(FILE *file, Viagem lista);
+void Export_cliente_to_file(FILE *file,pCliente *cliente);
+int choose_list_viagem_data(Viagem *lista,int x);
+int choose_list_viagem_destinos(Viagem *lista,char *destino);
 Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,int disponiveis);
+void diminuir_disp(Viagem *global,int data,int code);
+void aumentar_disp(Viagem *global,int data,int code);
+int get_viagens_disp_destino(Viagem *global,int data,int code);
+void enqueue(pCliente *lista,int code,int data,char *destino,int id,char *nome);
+void insert_last_adq(int option,Viagem *global,pCliente *adq,pCliente *esp,int data,char *destino,int cod_destino,int id,char *nome);
+int getlinename(char *line,char *aux);
+int getlinecode(char *line);
+void print_list_viagem(Viagem *lista);
+void print_list_cliente(pCliente *lista);
+void destroi_lista_viagem(Viagem lista);
+void destroi_lista_cliente(pCliente lista);
+int in_arr_int(int *arr,int i,int size);
+void print_clientes(pCliente *adq,pCliente *esp);
+void data_to_dia_mes_ano(int data, int *dia, int *mes, int *ano);
+int data_invert(int data);
+int data_fix(int data);
+void get_destino_from_cod(Viagem *lista,int cod,char *destino);
+void bubblesort_inv(int vect[], int n);
+void bubblesort_viagens(int vect[],int *codes, int n);
+void print_viagens_mais_recentes(Viagem *lista, int cod);
+int get_nome_from_id(pCliente *adq,pCliente *esp,int cliente,char *nome);
+int print_cliente_adq_adq(pCliente *adq, int cliente, Viagem *lista,int *data_arr,int *codes);
+int print_cliente_adq_esp(pCliente *esp, int cliente, Viagem *lista,int *data_arr, int *codes);
+void print_cliente_adq(pCliente adq,pCliente esp, int cliente, Viagem lista);
+void clean_input(void);
+void remove_return(char *in);
+int in_cliente(pCliente *cliente,int id);
+int check_name(char *str);
+int check_number(char *str);
+void dequeue(pCliente *lista,int id,int code,int data);
+void dequeue_and_save(pCliente *lista,int *code,int *data,char *destino, int *id, char *nome);
+void remover_espera(Viagem *global,pCliente *adq,pCliente *esp,int id);
+void remover_viagem(Viagem *global,pCliente *adq,pCliente *esp,int id);
+int menu_principal(Viagem global_viagens,pCliente *adq,pCliente *esp);
+
 
 int main(){
     /*Import de ficheiros para listas*/
+    pCliente esp=NULL;
+    pCliente adq=NULL;
+    Viagem global_viagens = NULL;
 
-    FILE *viagens = fopen("viagens-datas.txt","r");
-    Viagem global_viagens = (Viagem)criarlista();
+    FILE *viagens;
+    FILE *adquiridas;
+    FILE *espera;
+    FILE *adquiridas_wrt;
+    FILE *espera_wrt;
+
+    viagens = fopen("viagens-datas.txt","r");
     global_viagens = createGlobalListFromFile(viagens, global_viagens);
     fclose(viagens);
+    if( global_viagens==NULL ) return 0;
 
-    /*Fix: criar funcao ficheiro para lista*/
-    /*FILE *adquiridas = fopen("viagens-adquiridas.txt","r");*/
-    pCliente adq=criarlista();
-    /*createAdquiridaListFromFile(*adquiridas, adq);
-    fclose(adquiridas);*/
 
-    /*Fix: criar funcao ficheiro para lista*/
-    /*FILE *espera = fopen("viagens-espera.txt","r");*/
-    pCliente esp=criarlista();
-    /*createAdquiridaListFromFile(*espera, esp);
-    fclose(espera);*/
+    adquiridas = fopen("viagens-adquiridas.txt","r");
+    adq = createAdquiridaListFromFile(adquiridas,adq,esp,global_viagens);
+    fclose(adquiridas);
+
+    espera = fopen("viagens-espera.txt","r");
+    esp = createEsperaListFromFile(espera,esp,adq,global_viagens);
+    fclose(espera);
 
     /*Menu*/
-    menu_principal(global_viagens,adq,esp);
+    menu_principal(global_viagens,&adq,&esp);
 
-    /*Fix: escrever nos fiheiros*/
+    /*Atualizar ficheiros*/
+    adquiridas_wrt=fopen("viagens-adquiridas.txt","w");
+    Export_cliente_to_file(adquiridas_wrt,&adq);
+    fclose(adquiridas_wrt);
 
-    /*Fix: destruir listas*/
+    espera_wrt=fopen("viagens-espera.txt","w");
+    Export_cliente_to_file(espera_wrt,&esp);
+    fclose(espera);
+
+    /*Destruir listas*/
+    destroi_lista_viagem(global_viagens);
+    destroi_lista_cliente(adq);
+    destroi_lista_cliente(esp);
 
     return 0;
 }
 
-void Export_cliente_to_file(FILE *file,pCliente *cliente){
-    char str[128];
-    while( (*cliente)!=NULL ){
-        printf("Typin...\n");
-        fprintf(file,"%d %s\n",(*cliente)->cod_destino,(*cliente)->destino);
-        fprintf(file,"data: %d\n",(*cliente)->data);
-        fprintf(file,"%d %s\n",(*cliente)->id,(*cliente)->nome);
-        fprintf(file,"\n");
-        (*cliente)=(*cliente)->next;
-    }
+void cleanstr(char *out){
+    strcpy(out,"");
 }
 
-int choose_list_viagem_data(Viagem *lista,int x){
-    char destino[128];
-    Viagem *lista_orig=*lista;
-    get_destino_from_cod(lista,x,destino);
-    printf("%s\n",destino);
-    printf("Datas:\n");
-    int datas_arr[128];
-    int i=1;
-    int in;
-    int dia,ano,mes;
-    char input[128];
-    int prev_int;
-        while(*lista!=NULL){
-            if( (*lista)->cod_destino == x ){
-                break;
-            }
-            *lista=(*lista)->next;
-        }
-        prev_int=(*lista)->cod_destino;
-        while( *lista != NULL && (*lista)->cod_destino == prev_int ){
-            datas_arr[i-1]=(*lista)->data;
-            data_to_dia_mes_ano( (*lista)->data,&dia,&mes,&ano);
-            printf("(%d)%d/%d/%d\n",i,dia,mes,ano);
-            ++i;
-            *lista=(*lista)->next;
-        }
-
-    printf("\n");
-    printf("Opcao: ");
-    fgets (input, 128, stdin);
-    in=atoi(input);
-    if( isdigit(*input) && strlen(input)==2 && in<i && in>0 ){
-        *lista=lista_orig;
-        return datas_arr[in-1];
-    } else {
-        clrscr();
-        printf("Opcao Invalida!\n\n");
-        *lista=lista_orig;
-        choose_list_viagem_data(lista,x);
+pCliente createEsperaListFromFile(FILE *file, pCliente lista,pCliente adq,Viagem global){
+     char line[1024];
+     char destino[128];
+     char nome[128];
+     int data;
+     int id;
+     int dest_code;
+     while(fgets(line,1024,file)){ /*line 1*/
+        if(*line=='\n') continue;
+        cleanstr(destino);
+        dest_code=getlinecode(line);
+        getlinename(line,destino);
+        fgets(line,1024,file); /*line 2*/
+        data=atoi(line);
+        fgets(line,1024,file); /*line 3*/
+        id=getlinecode(line);
+        cleanstr(nome);
+        getlinename(line,nome);
+        insert_last_adq(1,&global,&adq,&lista,data,destino,dest_code,id,nome);
     }
+    return lista;
+
 }
 
-int choose_list_viagem_destinos(Viagem *lista,char *destino){
-    printf("Viagens:\n");
-    Viagem *lista_orig=*lista;
-    int viagens_arr[128];
-    char *dest_arr[128];
-    int i=1;
-    int in;
-    char input[128];
-    char prev_char[128];
-    if( *lista==NULL ){
-        printf("NULL\n");
-    }else{
-        while(*lista!=NULL){
-            if( strcmp(prev_char,(*lista)->destino)==0 ){
-                strcpy(prev_char,(*lista)->destino);
-            }else{
-                printf("(%d)%s\n",i,(*lista)->destino);
-                viagens_arr[i-1]=(*lista)->cod_destino;
-                dest_arr[i-1]=(*lista)->destino;
-                ++i;
-                strcpy(prev_char,(*lista)->destino);
-            }
-            *lista=(*lista)->next;
-        }
+pCliente createAdquiridaListFromFile(FILE *file, pCliente lista,pCliente esp,Viagem global){
+     char line[1024];
+     char destino[128];
+     char nome[128];
+     int data;
+     int id;
+     int dest_code;
+     while(fgets(line,1024,file)){ /*line 1*/
+        if(*line=='\n') continue;
+        cleanstr(destino);
+        dest_code=getlinecode(line);
+        getlinename(line,destino);
+        fgets(line,1024,file); /*line 2*/
+        data=atoi(line);
+        fgets(line,1024,file); /*line 3*/
+        id=getlinecode(line);
+        cleanstr(nome);
+        getlinename(line,nome);
+        insert_last_adq(0,&global,&lista,&esp,data,destino,dest_code,id,nome);
     }
-    printf("\n");
-    printf("Opcao: ");
-    fgets (input, 128, stdin);
-    in=atoi(input);
-    if( isdigit(*input) && strlen(input)==2 && in<i && in>0 ){
-        strcpy(destino,dest_arr[in-1]);
-        *lista=lista_orig;
-        return viagens_arr[in-1];
-    } else {
-        clrscr();
-        printf("Opcao Invalida!\n\n");
-        *lista=lista_orig;
-        choose_list_viagem_destinos(lista,destino);
-    }
+    return lista;
+
 }
 
 Viagem createGlobalListFromFile(FILE *file, Viagem lista){
@@ -213,6 +219,102 @@ Viagem createGlobalListFromFile(FILE *file, Viagem lista){
         clean_input();
     }
     return lista;
+}
+
+void Export_cliente_to_file(FILE *file,pCliente *cliente){
+    if( *cliente==NULL ) return;
+    pCliente *cliente_org=*cliente;
+    while( (*cliente)!=NULL ){
+        fprintf(file,"%d %s\n",(*cliente)->cod_destino,(*cliente)->destino);
+        fprintf(file,"%d\n",(*cliente)->data);
+        fprintf(file,"%d %s\n",(*cliente)->id,(*cliente)->nome);
+        fprintf(file,"\n");
+        (*cliente)=(*cliente)->next;
+    }
+    *cliente=cliente_org;
+}
+
+int choose_list_viagem_data(Viagem *lista,int x){
+    char destino[128];
+    int datas_arr[128];
+    int i=1;
+    int in;
+    int dia,ano,mes;
+    char input[128];
+    int prev_int;
+    Viagem *lista_orig=*lista;
+    get_destino_from_cod(lista,x,destino);
+    printf("%s\n",destino);
+    printf("Datas:\n");
+        while(*lista!=NULL){
+            if( (*lista)->cod_destino == x ){
+                break;
+            }
+            *lista=(*lista)->next;
+        }
+        prev_int=(*lista)->cod_destino;
+        while( *lista != NULL && (*lista)->cod_destino == prev_int ){
+            datas_arr[i-1]=(*lista)->data;
+            data_to_dia_mes_ano( (*lista)->data,&dia,&mes,&ano);
+            printf("(%d)%d/%d/%d\n",i,dia,mes,ano);
+            ++i;
+            *lista=(*lista)->next;
+        }
+
+    printf("\n");
+    printf("Opcao: ");
+    fgets (input, 128, stdin);
+    in=atoi(input);
+    if( isdigit(*input) && strlen(input)==2 && in<i && in>0 ){
+        *lista=lista_orig;
+        return datas_arr[in-1];
+    } else {
+        clrscr();
+        printf("Opcao Invalida!\n\n");
+        *lista=lista_orig;
+        choose_list_viagem_data(lista,x);
+    }
+}
+
+int choose_list_viagem_destinos(Viagem *lista,char *destino){
+    Viagem *lista_orig=*lista;
+    int viagens_arr[128];
+    char *dest_arr[128];
+    int i=1;
+    int in;
+    char input[128];
+    char prev_char[128];
+    printf("Viagens:\n");
+    if( *lista==NULL ){
+        printf("NULL\n");
+    }else{
+        while(*lista!=NULL){
+            if( strcmp(prev_char,(*lista)->destino)==0 ){
+                strcpy(prev_char,(*lista)->destino);
+            }else{
+                printf("(%d)%s\n",i,(*lista)->destino);
+                viagens_arr[i-1]=(*lista)->cod_destino;
+                dest_arr[i-1]=(*lista)->destino;
+                ++i;
+                strcpy(prev_char,(*lista)->destino);
+            }
+            *lista=(*lista)->next;
+        }
+    }
+    printf("\n");
+    printf("Opcao: ");
+    fgets (input, 128, stdin);
+    in=atoi(input);
+    if( isdigit(*input) && strlen(input)==2 && in<i && in>0 ){
+        strcpy(destino,dest_arr[in-1]);
+        *lista=lista_orig;
+        return viagens_arr[in-1];
+    } else {
+        clrscr();
+        printf("Opcao Invalida!\n\n");
+        *lista=lista_orig;
+        choose_list_viagem_destinos(lista,destino);
+    }
 }
 
 Viagem insert_last_viagem(Viagem lista,int data,int cod_destino,char *destino,int disponiveis){
@@ -271,12 +373,12 @@ int get_viagens_disp_destino(Viagem *global,int data,int code){
 
 void enqueue(pCliente *lista,int code,int data,char *destino,int id,char *nome){
     pCliente new_node = (pCliente) malloc( sizeof(Clientes_node) );
+    pCliente *lista_org=*lista;
     new_node->cod_destino=code;
     new_node->data=data;
     strcpy( new_node->destino,destino );
     new_node->id=id;
     strcpy( new_node->nome,nome);
-    pCliente *lista_org=*lista;
     if(*lista==NULL){
         new_node->next=NULL;
         *lista= new_node;
@@ -291,7 +393,6 @@ void enqueue(pCliente *lista,int code,int data,char *destino,int id,char *nome){
 }
 
 void insert_last_adq(int option,Viagem *global,pCliente *adq,pCliente *esp,int data,char *destino,int cod_destino,int id,char *nome){
-    /*Fix reset of global addres*/
     Viagem *global_org=*global;
     switch( option ){
         case 0:
@@ -303,7 +404,7 @@ void insert_last_adq(int option,Viagem *global,pCliente *adq,pCliente *esp,int d
             }
             break;
         case 1:
-            enqueue(esp,data,cod_destino,id,destino,nome);
+            enqueue(esp,cod_destino,data,destino,id,nome);
             break;
     }
     *global=global_org;
@@ -341,6 +442,7 @@ int getlinecode(char *line){
 }
 
 void print_list_viagem(Viagem *lista){
+    Viagem *lista_org=*lista;
     if( *lista==NULL ){
         printf("NULL\n");
     }else{
@@ -353,7 +455,7 @@ void print_list_viagem(Viagem *lista){
         }
     }
     printf("\n");
-    getchar();
+    *lista=lista_org;
 }
 
 void print_list_cliente(pCliente *lista){
@@ -378,6 +480,15 @@ void print_list_cliente(pCliente *lista){
 
 void destroi_lista_viagem(Viagem lista){
     Viagem next;
+    while(lista!=NULL){
+        next=lista->next;
+        free(lista);
+        lista=next;
+    }
+}
+
+void destroi_lista_cliente(pCliente lista){
+    pCliente next;
     while(lista!=NULL){
         next=lista->next;
         free(lista);
@@ -534,6 +645,7 @@ void print_viagens_mais_recentes(Viagem *lista, int cod){
 int get_nome_from_id(pCliente *adq,pCliente *esp,int cliente,char *nome){
     pCliente *adq_org=*adq;
     pCliente *esp_org=*esp;
+    cleanstr(nome);
     while( *adq!=NULL ){
         if( (*adq)->id==cliente ){
             strcpy(nome,(*adq)->nome);
@@ -588,32 +700,30 @@ int print_cliente_adq_adq(pCliente *adq, int cliente, Viagem *lista,int *data_ar
     return size;
 }
 
-int print_cliente_adq_esp(pCliente *esp, int cliente, Viagem *lista){
+int print_cliente_adq_esp(pCliente *esp, int cliente, Viagem *lista,int *data_arr, int *codes){
     pCliente *esp_org=*esp;
-    int esp_arr[128];
     int i=0;
     int j=0;
     int size=0;
     int data,dia,mes,ano;
-    int codes[128];
     char destino[128];
     if( *esp!=NULL ) printf("\nViagens em lista de espera:\n");
     while( *esp!=NULL ){
         if( (*esp)->id == cliente ){
-            esp_arr[i]=data_invert( (*esp)->data );
+            data_arr[i]=data_invert( (*esp)->data );
             codes[i]=(*esp)->cod_destino;
             ++i;
         }
         (*esp)=(*esp)->next;
     }
-    bubblesort_viagens(esp_arr,codes,i);
+    bubblesort_viagens(data_arr,codes,i);
     while( j<i ){
-        data=esp_arr[j];
+        data=data_arr[j];
         data=data_fix(data);
         data_to_dia_mes_ano(data,&dia,&mes,&ano);
         printf("(%d) ",j+1);
         get_destino_from_cod(lista,codes[j],destino);
-        printf("%s\n",destino);
+        printf("%s",destino);
         printf(" / %d-%d-%d\n",dia,mes,ano);
         ++size;
         ++j;
@@ -625,9 +735,11 @@ int print_cliente_adq_esp(pCliente *esp, int cliente, Viagem *lista){
 void print_cliente_adq(pCliente adq,pCliente esp, int cliente, Viagem lista){
     int data_arr[128];
     int codes[128];
+    int data_arr_2[128];
+    int codes_2[128];
     printf("Viagens e datas respetivas\n");
     print_cliente_adq_adq(adq,cliente,lista,data_arr,codes);
-    print_cliente_adq_esp(esp,cliente,lista);
+    print_cliente_adq_esp(esp,cliente,lista,data_arr_2,codes_2);
 }
 
 void clean_input(void){
@@ -644,47 +756,6 @@ void remove_return(char *in){
     }
     out[i]='\0';
     strcpy(in,out);
-}
-
-void remover_espera(Viagem global,pCliente esp,int id){
-    char op[128];
-    char nome[128];
-    char destino[128];
-    int option,size,data,code,cc;
-    int i=0;
-    pCliente prev_node=NULL;
-    pCliente next_node=esp->next;
-    pCliente esp_org=esp;
-    printf("Cancelar Viagem\n");
-    size = print_cliente_adq_esp(esp,id,global);
-    printf("\nOpcao: ");
-    fgets (op, 128, stdin);
-    option=atoi(op);
-    if( isdigit(*op) && strlen(op)==2 && option<size+1 && option>0 ){
-    } else {
-        clrscr();
-        printf("Opcao Invalida!\n\n");
-        return remover_espera(global,esp,id);
-    }
-
-    while(esp!=NULL){
-        if( esp->id == id ){
-            ++i;
-            if( i==option ){
-                if( prev_node==NULL ){
-                    free(esp);
-                    return next_node;
-                }else{
-                    free(esp);
-                    prev_node->next=next_node;
-                    return esp_org;
-                }
-            }
-        }
-        prev_node=esp;
-        esp=esp->next;
-        next_node=esp->next;
-    }
 }
 
 int in_cliente(pCliente *cliente,int id){
@@ -769,6 +840,36 @@ void dequeue_and_save(pCliente *lista,int *code,int *data,char *destino, int *id
     *lista=next_node;
 }
 
+void remover_espera(Viagem *global,pCliente *adq,pCliente *esp,int id){
+    int size;
+    char op[128];
+    int option;
+    int code;
+    int data;
+    int data_arr[128];
+    int codes[128];
+
+    printf("Cancelar viagem em espera");
+    size=print_cliente_adq_esp(esp,id,global,data_arr,codes);
+
+    printf("\nOpcao: ");
+    fgets (op, 128, stdin);
+    option=atoi(op);
+    if( isdigit(*op) && strlen(op)==2 && option<size+1 && option>0 ){
+    } else {
+        clrscr();
+        printf("Opcao Invalida!\n\n");
+        remover_espera(global,adq,esp,id);
+        return;
+    }
+
+    code=codes[option-1];
+    data=data_arr[option-1];
+    data=data_fix(data);
+
+    dequeue(esp,id,code,data);
+}
+
 void remover_viagem(Viagem *global,pCliente *adq,pCliente *esp,int id){
     int size;
     char op[128];
@@ -782,7 +883,7 @@ void remover_viagem(Viagem *global,pCliente *adq,pCliente *esp,int id){
     int data_aux;
     char *destino_aux[128];
     int id_aux;
-    char *nome_aux[128];
+    char nome_aux[128];
 
     printf("Cancelar viagem");
     size=print_cliente_adq_adq(adq,id,global,data_arr,codes);
@@ -794,7 +895,8 @@ void remover_viagem(Viagem *global,pCliente *adq,pCliente *esp,int id){
     } else {
         clrscr();
         printf("Opcao Invalida!\n\n");
-        return remover_viagem(global,adq,esp,id);
+        remover_viagem(global,adq,esp,id);
+        return;
     }
 
     code=codes[option-1];
@@ -811,9 +913,8 @@ void remover_viagem(Viagem *global,pCliente *adq,pCliente *esp,int id){
 
 }
 
-int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
-    /*FIX: nao permitir nome e id nulo*/
-    Viagem *global_viagens_org=*global_viagens;
+int menu_principal(Viagem global_viagens,pCliente *adq,pCliente *esp) {
+    /*Viagem *global_viagens_org=*global_viagens;*/
     char op[128];
     int option,cod,data,id,cond;
     char nome[128];
@@ -867,7 +968,7 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
                 }
             }
             id=atoi(nome);
-            if( get_nome_from_id(&adq,&esp,id,nome)==0 ){
+            if( get_nome_from_id(adq,esp,id,nome)==0 ){
                 cond=1;
                 while( cond==1 ){
                     printf("Nome: ");
@@ -884,7 +985,7 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
                     }
                 }
             }
-            insert_last_adq(0,&global_viagens,&adq,&esp,data,destino,cod,id,nome);
+            insert_last_adq(0,&global_viagens,adq,esp,data,destino,cod,id,nome);
             break;
 
     /*(2)Colocar em fila de espera para uma viagem*/
@@ -912,7 +1013,7 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
             }
             id=atoi(nome);
 
-            if( get_nome_from_id(&adq,&esp,id,nome)==0 ){
+            if( get_nome_from_id(adq,esp,id,nome)==0 ){
                 cond=1;
                 while( cond==1 ){
                     printf("Nome: ");
@@ -929,12 +1030,12 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
                 }
             }
             remove_return(nome);
-            insert_last_adq(1,&global_viagens,&adq,&esp,data,destino,cod,id,nome);
+            insert_last_adq(1,&global_viagens,adq,esp,data,destino,cod,id,nome);
             break;
         /*(3)Cancelar viagem*/
         case 3:
             clrscr();
-            if( adq==NULL && esp==NULL ){
+            if( *adq==NULL && *esp==NULL ){
                 printf("Nao existem clientes no sistema\n");
                 clean_input();
                 break;
@@ -954,16 +1055,44 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
             }
 
             id=atoi(nome);
-            if( in_cliente(&adq,id)==0 ){
+            if( in_cliente(adq,id)==0 ){
                 printf("Cliente nao existe\n");
                 clean_input();
                 break;
             }
             clrscr();
-            remover_viagem(&global_viagens,&adq,&esp,id);
+            remover_viagem(&global_viagens,adq,esp,id);
             break;
         /*(4)Cancelar pedido em fila de espera*/
         case 4:
+            clrscr();
+            if( *adq==NULL && *esp==NULL ){
+                printf("Nao existem clientes no sistema\n");
+                clean_input();
+                break;
+            }
+            cond=1;
+            while( cond==1 ){
+                printf("Cancelar viagem em lista de espera\n");
+                printf("Numero cartao do cidadao: ");
+                fgets (nome, 128, stdin);
+                remove_return(nome);
+                cond=check_number(nome);
+                if( cond==1 ){
+                    printf("Numero invalido!");
+                    clean_input();
+                    clrscr();
+                }
+            }
+
+            id=atoi(nome);
+            if( in_cliente(esp,id)==0 ){
+                printf("Cliente nao existe\n");
+                clean_input();
+                break;
+            }
+            clrscr();
+            remover_espera(&global_viagens,adq,esp,id);
             break;
         /*(5)Listar viagens de um destino*/
         case 5:
@@ -994,20 +1123,20 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
             }
 
             id=atoi(nome);
-            if( get_nome_from_id(&adq,&esp,id,nome)==0 ){
+            if( get_nome_from_id(adq,esp,id,nome)==0 ){
                 printf("Cliente nao encontrado!\n");
                 clean_input();
                 break;
             }
             clrscr();
-            print_cliente_adq(&adq,&esp,id,&global_viagens);
+            print_cliente_adq(adq,esp,id,&global_viagens);
             clean_input();
             break;
         /*(7)Listar clientes*/
         case 7:
             clrscr();
             printf("Lista de clientes\n");
-            print_clientes(&adq,&esp);
+            print_clientes(adq,esp);
             clean_input();
             break;
         case 8:
@@ -1020,13 +1149,9 @@ int menu_principal(Viagem *global_viagens,pCliente *adq,pCliente *esp) {
     fgets (op, 128, stdin);
     if( (strlen(op)==2 && (*op=='S' || *op=='s') || *op=='\n') ){
         clrscr();
-        /*Restore lists*/
-        *global_viagens=global_viagens_org;
+        /* *global_viagens=global_viagens_org;*/
         menu_principal(global_viagens,adq,esp);
-    }else{
-        FILE *adquiridas=fopen("viagens-adquiridas.txt","w");
-        Export_cliente_to_file(adquiridas,&adq);
-        fclose(adquiridas);
-        return 0;
     }
+
+    return 0;
 }
