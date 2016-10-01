@@ -1,4 +1,4 @@
-# travel Manager
+# Travel Manager
 This project is, as the name suggests, a simple travel manager. It is build in C and the user interface is the console of your OS.
 
 #Features
